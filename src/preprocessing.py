@@ -65,3 +65,12 @@ def grayscale_luma(image_data: np.ndarray) -> np.ndarray:
 def preprocess_luma(image_data: np.ndarray) -> np.ndarray:
     """Apply luma grayscale conversion followed by notebook normalization."""
     return normalize_grayscale(grayscale_luma(image_data))
+
+
+def preprocess(image_data: np.ndarray, method: str = "mean") -> np.ndarray:
+    """Preprocess images using the named ``mean`` or ``luma`` strategy."""
+    if method == "mean":
+        return preprocess_mean(image_data)
+    if method == "luma":
+        return preprocess_luma(image_data)
+    raise ValueError("method must be 'mean' or 'luma'")

@@ -6,6 +6,7 @@ from src.preprocessing import (
     grayscale_luma,
     grayscale_mean,
     normalize_grayscale,
+    preprocess,
     preprocess_luma,
     preprocess_mean,
 )
@@ -56,6 +57,14 @@ class PreprocessingAlternativeTests(unittest.TestCase):
         self.assertEqual(result.shape, (1, 1, 1, 1))
         self.assertGreater(float(result.min()), 0.1)
         self.assertLess(float(result.max()), 0.9)
+
+    def test_strategy_selector_keeps_alternatives_explicit(self):
+        image = np.array([[[[255, 0, 0]]]], dtype=np.uint8)
+
+        np.testing.assert_allclose(preprocess(image, "mean"), preprocess_mean(image))
+        np.testing.assert_allclose(preprocess(image, "luma"), preprocess_luma(image))
+        with self.assertRaises(ValueError):
+            preprocess(image, "unknown")
 
 
 if __name__ == "__main__":
