@@ -45,3 +45,23 @@ def normalize_grayscale(
 def preprocess_mean(image_data: np.ndarray) -> np.ndarray:
     """Apply the notebook's mean grayscale conversion and normalization."""
     return normalize_grayscale(grayscale_mean(image_data))
+
+
+def grayscale_luma(image_data: np.ndarray) -> np.ndarray:
+    """Return perceptual BT.601 luma for RGB image batches.
+
+    Unlike :func:`grayscale_mean`, this method weights green more heavily and
+    therefore preserves perceived brightness more closely for colored signs.
+    """
+    image = np.asarray(image_data)
+    if image.ndim != 4 or image.shape[-1] != 3:
+        raise ValueError("image_data must have shape (batch, height, width, 3)")
+    weights = np.array([0.299, 0.587, 0.114], dtype=np.float64)
+    return np.tensordot(image.astype(np.float64, copy=False), weights, axes=([-1], [0]))[
+        ..., np.newaxis
+    ]
+
+
+def preprocess_luma(image_data: np.ndarray) -> np.ndarray:
+    """Apply luma grayscale conversion followed by notebook normalization."""
+    return normalize_grayscale(grayscale_luma(image_data))
