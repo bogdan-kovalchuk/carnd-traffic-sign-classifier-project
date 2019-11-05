@@ -9,6 +9,7 @@ from src.preprocessing import (
     preprocess,
     preprocess_luma,
     preprocess_mean,
+    validate_image_batch,
 )
 
 
@@ -65,6 +66,37 @@ class PreprocessingAlternativeTests(unittest.TestCase):
         np.testing.assert_allclose(preprocess(image, "luma"), preprocess_luma(image))
         with self.assertRaises(ValueError):
             preprocess(image, "unknown")
+
+
+class PreprocessingRobustnessTests(unittest.TestCase):
+    def test_validation_rejects_bad_shapes_and_values(self):
+        with self.assertRaises(ValueError):
+            validate_image_batch(np.zeros((2, 32, 32)))
+        with self.assertRaises(ValueError):
+            validate_image_batch(np.zeros((0, 32, 32, 3)))
+        with self.assertRaises(ValueError):
+            validate_image_batch(np.array([[[[np.nan, 0, 0]]]]))
+        with self.assertRaises(TypeError):
+            validate_image_batch(np.array([[[["pixel"]]]], dtype=object))
+
+    def test_validation_enforces_requested_channels(self):
+        image = np.zeros((1, 2, 2, 1), dtype=np.uint8)
+
+        with self.assertRaises(ValueError):
+            validate_image_batch(image, channels=3)
+
+    def test_normalization_rejects_non_finite_pixels_and_bad_bounds(self):
+        with self.assertRaises(ValueError):
+            normalize_grayscale(np.array([np.inf]))
+        with self.assertRaises(ValueError):
+            normalize_grayscale(np.array([0]), input_min=1, input_max=1)
+        with self.assertRaises(ValueError):
+            normalize_grayscale(np.array([0]), output_min=0.9, output_max=0.1)
+
+    def test_normalization_supports_finite_custom_intervals(self):
+        result = normalize_grayscale(np.array([-1.0, 0.0, 1.0]), 0.0, 1.0, -1.0, 1.0)
+
+        np.testing.assert_allclose(result, [0.0, 0.5, 1.0])
 
 
 if __name__ == "__main__":
