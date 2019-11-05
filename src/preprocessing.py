@@ -10,13 +10,25 @@ from __future__ import annotations
 import numpy as np
 
 
-def grayscale_mean(image_data: np.ndarray) -> np.ndarray:
-    """Return channel-mean grayscale data with a trailing singleton channel."""
+def validate_image_batch(image_data: np.ndarray, channels: int | None = None) -> np.ndarray:
+    """Validate and return an image batch without copying its values."""
     image = np.asarray(image_data)
     if image.ndim != 4:
         raise ValueError("image_data must have shape (batch, height, width, channels)")
-    if image.shape[-1] == 0:
-        raise ValueError("image_data must contain at least one channel")
+    if not np.issubdtype(image.dtype, np.number):
+        raise TypeError("image_data must contain numeric values")
+    if any(size == 0 for size in image.shape):
+        raise ValueError("image_data dimensions must be non-empty")
+    if channels is not None and image.shape[-1] != channels:
+        raise ValueError("image_data has an unexpected channel count")
+    if not np.isfinite(image).all():
+        raise ValueError("image_data must contain only finite values")
+    return image
+
+
+def grayscale_mean(image_data: np.ndarray) -> np.ndarray:
+    """Return channel-mean grayscale data with a trailing singleton channel."""
+    image = validate_image_batch(image_data)
     return image.astype(np.float64, copy=False).mean(axis=3, keepdims=True)
 
 
@@ -37,7 +49,10 @@ def normalize_grayscale(
     image = np.asarray(image_data)
     if not np.issubdtype(image.dtype, np.number):
         raise TypeError("image_data must contain numeric values")
-    return output_min + (image.astype(np.float64) - input_min) * (
+    image = image.astype(np.float64)
+    if not np.isfinite(image).all():
+        raise ValueError("image_data must contain only finite values")
+    return output_min + (image - input_min) * (
         (output_max - output_min) / (input_max - input_min)
     )
 
@@ -53,9 +68,7 @@ def grayscale_luma(image_data: np.ndarray) -> np.ndarray:
     Unlike :func:`grayscale_mean`, this method weights green more heavily and
     therefore preserves perceived brightness more closely for colored signs.
     """
-    image = np.asarray(image_data)
-    if image.ndim != 4 or image.shape[-1] != 3:
-        raise ValueError("image_data must have shape (batch, height, width, 3)")
+    image = validate_image_batch(image_data, channels=3)
     weights = np.array([0.299, 0.587, 0.114], dtype=np.float64)
     return np.tensordot(image.astype(np.float64, copy=False), weights, axes=([-1], [0]))[
         ..., np.newaxis
