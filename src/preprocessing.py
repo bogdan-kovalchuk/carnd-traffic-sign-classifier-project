@@ -3,6 +3,14 @@
 The notebook converts RGB pixels to a single channel by taking their mean and
 then maps the byte range ``[0, 255]`` to ``[0.1, 0.9]``.  These functions keep
 that behavior independent of TensorFlow so it can be tested on small arrays.
+
+Complexity and trade-offs:
+    ``grayscale_mean`` is a one-pass vectorized reduction, O(NHWK) time and
+    O(NHW) output space for N images of H by W pixels and K channels.
+    ``grayscale_luma`` uses a tensor contraction with the same asymptotic
+    cost, but its weighted arithmetic better models human brightness and is
+    restricted to RGB input.  Normalization is O(M) in the number of pixels
+    and returns a float64 array, trading memory for predictable numeric range.
 """
 
 from __future__ import annotations
