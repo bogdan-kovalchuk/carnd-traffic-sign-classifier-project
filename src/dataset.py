@@ -78,3 +78,39 @@ def stratified_split(
     validation = np.sort(np.concatenate(validation_parts).astype(np.int64, copy=False))
     validate_split_indices(train, validation, values.size)
     return train, validation
+
+
+def stratified_split_round_robin(
+    labels: np.ndarray,
+    validation_fraction: float = 0.2,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Split by evenly spaced within-class positions without random state.
+
+    This alternative preserves source order and selects validation examples at
+    regular intervals.  It is useful when a caller needs repeatability across
+    NumPy versions, at the cost of offering no protection against ordered data
+    artifacts that a seeded shuffle can avoid.
+    """
+    values = validate_labels(labels)
+    if not np.isfinite(validation_fraction) or not 0 < validation_fraction < 1:
+        raise ValueError("validation_fraction must be finite and between zero and one")
+
+    train_parts = []
+    validation_parts = []
+    for class_id in np.unique(values):
+        class_indices = np.flatnonzero(values == class_id)
+        validation_count = int(np.floor(class_indices.size * validation_fraction))
+        if class_indices.size >= 2:
+            validation_count = max(1, min(class_indices.size - 1, validation_count))
+        validation_positions = np.linspace(
+            0, class_indices.size, num=validation_count, endpoint=False, dtype=np.int64
+        )
+        validation_mask = np.zeros(class_indices.size, dtype=bool)
+        validation_mask[validation_positions] = True
+        validation_parts.append(class_indices[validation_mask])
+        train_parts.append(class_indices[~validation_mask])
+
+    train = np.sort(np.concatenate(train_parts).astype(np.int64, copy=False))
+    validation = np.sort(np.concatenate(validation_parts).astype(np.int64, copy=False))
+    validate_split_indices(train, validation, values.size)
+    return train, validation

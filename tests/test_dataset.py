@@ -2,7 +2,12 @@ import unittest
 
 import numpy as np
 
-from src.dataset import stratified_split, validate_labels, validate_split_indices
+from src.dataset import (
+    stratified_split,
+    stratified_split_round_robin,
+    validate_labels,
+    validate_split_indices,
+)
 
 
 class DatasetCharacterizationTests(unittest.TestCase):
@@ -45,6 +50,18 @@ class DatasetCharacterizationTests(unittest.TestCase):
             stratified_split(self.labels, validation_fraction=1)
         with self.assertRaises(TypeError):
             stratified_split(self.labels, seed=1.5)
+
+
+class DatasetAlternativeTests(unittest.TestCase):
+    def test_round_robin_is_distinct_but_preserves_partition_invariants(self):
+        labels = np.repeat(np.arange(3), 4)
+
+        seeded = stratified_split(labels, validation_fraction=0.25, seed=17)
+        round_robin = stratified_split_round_robin(labels, validation_fraction=0.25)
+
+        validate_split_indices(*round_robin, labels.size)
+        self.assertFalse(np.array_equal(seeded[1], round_robin[1]))
+        self.assertEqual(set(labels[round_robin[1]]), {0, 1, 2})
 
 
 if __name__ == "__main__":
