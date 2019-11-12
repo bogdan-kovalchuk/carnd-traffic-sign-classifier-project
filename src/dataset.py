@@ -7,6 +7,16 @@ from numbers import Integral
 import numpy as np
 
 
+def _validate_fraction(validation_fraction: float) -> float:
+    """Validate a scalar fraction used by split strategies."""
+    if not np.isscalar(validation_fraction) or isinstance(validation_fraction, (str, bytes)):
+        raise TypeError("validation_fraction must be a numeric scalar")
+    fraction = float(validation_fraction)
+    if not np.isfinite(fraction) or not 0 < fraction < 1:
+        raise ValueError("validation_fraction must be finite and between zero and one")
+    return fraction
+
+
 def validate_labels(labels: np.ndarray) -> np.ndarray:
     """Validate a non-empty one-dimensional integer label array."""
     values = np.asarray(labels)
@@ -14,6 +24,8 @@ def validate_labels(labels: np.ndarray) -> np.ndarray:
         raise ValueError("labels must be a non-empty one-dimensional array")
     if not np.issubdtype(values.dtype, np.integer):
         raise TypeError("labels must contain integer class ids")
+    if np.any(values < 0):
+        raise ValueError("labels must be non-negative class ids")
     return values
 
 
@@ -59,8 +71,7 @@ def stratified_split(
     values = validate_labels(labels)
     if not isinstance(seed, Integral) or isinstance(seed, bool):
         raise TypeError("seed must be an integer")
-    if not np.isfinite(validation_fraction) or not 0 < validation_fraction < 1:
-        raise ValueError("validation_fraction must be finite and between zero and one")
+    validation_fraction = _validate_fraction(validation_fraction)
 
     rng = np.random.default_rng(seed)
     train_parts = []
@@ -76,6 +87,8 @@ def stratified_split(
 
     train = np.sort(np.concatenate(train_parts).astype(np.int64, copy=False))
     validation = np.sort(np.concatenate(validation_parts).astype(np.int64, copy=False))
+    if validation.size == 0 or train.size == 0:
+        raise ValueError("labels must contain a class with enough samples for both partitions")
     validate_split_indices(train, validation, values.size)
     return train, validation
 
@@ -92,8 +105,7 @@ def stratified_split_round_robin(
     artifacts that a seeded shuffle can avoid.
     """
     values = validate_labels(labels)
-    if not np.isfinite(validation_fraction) or not 0 < validation_fraction < 1:
-        raise ValueError("validation_fraction must be finite and between zero and one")
+    validation_fraction = _validate_fraction(validation_fraction)
 
     train_parts = []
     validation_parts = []
@@ -112,5 +124,7 @@ def stratified_split_round_robin(
 
     train = np.sort(np.concatenate(train_parts).astype(np.int64, copy=False))
     validation = np.sort(np.concatenate(validation_parts).astype(np.int64, copy=False))
+    if validation.size == 0 or train.size == 0:
+        raise ValueError("labels must contain a class with enough samples for both partitions")
     validate_split_indices(train, validation, values.size)
     return train, validation
