@@ -35,6 +35,14 @@ class DatasetCharacterizationTests(unittest.TestCase):
 
         np.testing.assert_array_equal(result, [2, 0, 1])
 
+    def test_label_validation_rejects_empty_float_and_negative_labels(self):
+        with self.assertRaises(ValueError):
+            validate_labels(np.array([], dtype=np.int64))
+        with self.assertRaises(TypeError):
+            validate_labels(np.array([0.0, 1.0]))
+        with self.assertRaises(ValueError):
+            validate_labels(np.array([0, -1]))
+
     def test_split_validator_requires_an_exact_partition(self):
         with self.assertRaises(ValueError):
             validate_split_indices([0, 1], [1, 2], 3)
@@ -50,6 +58,18 @@ class DatasetCharacterizationTests(unittest.TestCase):
             stratified_split(self.labels, validation_fraction=1)
         with self.assertRaises(TypeError):
             stratified_split(self.labels, seed=1.5)
+        with self.assertRaises(TypeError):
+            stratified_split(self.labels, validation_fraction="0.2")
+        with self.assertRaises(ValueError):
+            stratified_split(np.array([0, 1]), validation_fraction=0.5)
+
+    def test_split_validator_rejects_invalid_dataset_boundaries(self):
+        with self.assertRaises(ValueError):
+            validate_split_indices([0], [1], 1)
+        with self.assertRaises(ValueError):
+            validate_split_indices([0, 2], [1], 3)
+        with self.assertRaises(TypeError):
+            validate_split_indices([0], [1], 3.0)
 
 
 class DatasetAlternativeTests(unittest.TestCase):
