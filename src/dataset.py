@@ -1,4 +1,12 @@
-"""Deterministic validation and splitting helpers for labeled image data."""
+"""Deterministic validation and splitting helpers for labeled image data.
+
+Complexity and trade-offs:
+    Both split strategies scan each label once and sort the resulting indices,
+    taking O(n log n) time and O(n) auxiliary space.  ``stratified_split``
+    adds seeded permutation work and is safer for data ordered by capture
+    source.  ``stratified_split_round_robin`` avoids random state and is stable
+    across runs, but can preserve periodic or source-order bias.
+"""
 
 from __future__ import annotations
 
