@@ -50,6 +50,17 @@ def translate_reflect(image_data: np.ndarray, dx: int = 0, dy: int = 0) -> np.nd
     return images[:, y_indices, :, :][:, :, x_indices, :].copy()
 
 
+def translate(image_data: np.ndarray, dx: int = 0, dy: int = 0, mode: str = "zero") -> np.ndarray:
+    """Translate images using ``zero``, ``wrap``, or ``reflect`` boundaries."""
+    if mode == "zero":
+        return translate_zero(image_data, dx, dy)
+    if mode == "wrap":
+        return translate_wrap(image_data, dx, dy)
+    if mode == "reflect":
+        return translate_reflect(image_data, dx, dy)
+    raise ValueError("mode must be 'zero', 'wrap', or 'reflect'")
+
+
 def _validate_offset(offset: int, name: str) -> None:
     if not isinstance(offset, Integral) or isinstance(offset, bool):
         raise TypeError(f"{name} must be an integer")

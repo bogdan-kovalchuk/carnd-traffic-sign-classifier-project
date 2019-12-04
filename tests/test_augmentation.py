@@ -4,6 +4,7 @@ import numpy as np
 
 from src.augmentation import (
     horizontal_flip,
+    translate,
     translate_reflect,
     translate_wrap,
     translate_zero,
@@ -37,6 +38,19 @@ class AugmentationCharacterizationTests(unittest.TestCase):
 
         expected = np.array([[[[5], [4], [5]], [[2], [1], [2]]]], dtype=np.uint8)
         np.testing.assert_array_equal(result, expected)
+
+    def test_translation_selector_exposes_each_boundary_strategy(self):
+        for mode, function in (
+            ("zero", translate_zero),
+            ("wrap", translate_wrap),
+            ("reflect", translate_reflect),
+        ):
+            np.testing.assert_array_equal(
+                translate(self.images, dx=1, dy=1, mode=mode),
+                function(self.images, dx=1, dy=1),
+            )
+        with self.assertRaises(ValueError):
+            translate(self.images, mode="crop")
 
     def test_augmentation_does_not_mutate_input(self):
         original = self.images.copy()
