@@ -2,7 +2,12 @@ import unittest
 
 import numpy as np
 
-from src.augmentation import horizontal_flip, translate_wrap, translate_zero
+from src.augmentation import (
+    horizontal_flip,
+    translate_reflect,
+    translate_wrap,
+    translate_zero,
+)
 
 
 class AugmentationCharacterizationTests(unittest.TestCase):
@@ -25,6 +30,12 @@ class AugmentationCharacterizationTests(unittest.TestCase):
         result = translate_wrap(self.images, dx=1, dy=1)
 
         expected = np.array([[[[6], [4], [5]], [[3], [1], [2]]]], dtype=np.uint8)
+        np.testing.assert_array_equal(result, expected)
+
+    def test_reflect_translation_has_different_boundary_semantics(self):
+        result = translate_reflect(self.images, dx=1, dy=1)
+
+        expected = np.array([[[[5], [4], [5]], [[2], [1], [2]]]], dtype=np.uint8)
         np.testing.assert_array_equal(result, expected)
 
     def test_augmentation_does_not_mutate_input(self):

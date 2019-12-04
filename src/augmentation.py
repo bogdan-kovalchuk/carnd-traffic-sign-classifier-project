@@ -39,6 +39,17 @@ def translate_wrap(image_data: np.ndarray, dx: int = 0, dy: int = 0) -> np.ndarr
     return np.roll(images, shift=(dy, dx), axis=(1, 2)).copy()
 
 
+def translate_reflect(image_data: np.ndarray, dx: int = 0, dy: int = 0) -> np.ndarray:
+    """Translate images by reflecting source coordinates at frame edges."""
+    images = validate_image_batch(image_data)
+    _validate_offset(dx, "dx")
+    _validate_offset(dy, "dy")
+    height, width = images.shape[1:3]
+    y_indices = _reflect_indices(height, np.arange(height) - dy)
+    x_indices = _reflect_indices(width, np.arange(width) - dx)
+    return images[:, y_indices, :, :][:, :, x_indices, :].copy()
+
+
 def _validate_offset(offset: int, name: str) -> None:
     if not isinstance(offset, Integral) or isinstance(offset, bool):
         raise TypeError(f"{name} must be an integer")
@@ -50,3 +61,11 @@ def _translation_slices(size: int, offset: int):
     if offset >= 0:
         return slice(0, size - offset), slice(offset, size)
     return slice(-offset, size), slice(0, size + offset)
+
+
+def _reflect_indices(size: int, indices: np.ndarray) -> np.ndarray:
+    if size == 1:
+        return np.zeros_like(indices)
+    period = 2 * (size - 1)
+    folded = np.mod(indices, period)
+    return np.where(folded < size, folded, period - folded)
