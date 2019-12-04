@@ -31,6 +31,14 @@ def translate_zero(image_data: np.ndarray, dx: int = 0, dy: int = 0) -> np.ndarr
     return result
 
 
+def translate_wrap(image_data: np.ndarray, dx: int = 0, dy: int = 0) -> np.ndarray:
+    """Translate images with periodic wrap-around at the frame boundary."""
+    images = validate_image_batch(image_data)
+    _validate_offset(dx, "dx")
+    _validate_offset(dy, "dy")
+    return np.roll(images, shift=(dy, dx), axis=(1, 2)).copy()
+
+
 def _validate_offset(offset: int, name: str) -> None:
     if not isinstance(offset, Integral) or isinstance(offset, bool):
         raise TypeError(f"{name} must be an integer")

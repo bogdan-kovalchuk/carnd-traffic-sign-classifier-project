@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from src.augmentation import horizontal_flip, translate_zero
+from src.augmentation import horizontal_flip, translate_wrap, translate_zero
 
 
 class AugmentationCharacterizationTests(unittest.TestCase):
@@ -19,6 +19,12 @@ class AugmentationCharacterizationTests(unittest.TestCase):
         result = translate_zero(self.images, dx=1, dy=1)
 
         expected = np.array([[[[0], [0], [0]], [[0], [1], [2]]]], dtype=np.uint8)
+        np.testing.assert_array_equal(result, expected)
+
+    def test_wrap_translation_retains_pixels_at_the_opposite_edge(self):
+        result = translate_wrap(self.images, dx=1, dy=1)
+
+        expected = np.array([[[[6], [4], [5]], [[3], [1], [2]]]], dtype=np.uint8)
         np.testing.assert_array_equal(result, expected)
 
     def test_augmentation_does_not_mutate_input(self):
