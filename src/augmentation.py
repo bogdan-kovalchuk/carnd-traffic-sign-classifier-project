@@ -52,6 +52,8 @@ def translate_reflect(image_data: np.ndarray, dx: int = 0, dy: int = 0) -> np.nd
 
 def translate(image_data: np.ndarray, dx: int = 0, dy: int = 0, mode: str = "zero") -> np.ndarray:
     """Translate images using ``zero``, ``wrap``, or ``reflect`` boundaries."""
+    if not isinstance(mode, str):
+        raise TypeError("mode must be a string")
     if mode == "zero":
         return translate_zero(image_data, dx, dy)
     if mode == "wrap":
