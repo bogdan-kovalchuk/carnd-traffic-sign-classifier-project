@@ -51,6 +51,21 @@ class AugmentationCharacterizationTests(unittest.TestCase):
             )
         with self.assertRaises(ValueError):
             translate(self.images, mode="crop")
+        with self.assertRaises(TypeError):
+            translate(self.images, mode=None)
+
+    def test_invalid_shapes_offsets_and_extreme_offsets_are_handled(self):
+        with self.assertRaises(ValueError):
+            horizontal_flip(np.zeros((2, 3, 3), dtype=np.uint8))
+        with self.assertRaises(TypeError):
+            translate_zero(self.images, dx=0.5)
+        with self.assertRaises(TypeError):
+            translate_wrap(self.images, dy=True)
+        np.testing.assert_array_equal(
+            translate_zero(self.images, dx=100), np.zeros_like(self.images)
+        )
+        one_pixel = np.array([[[[7]]]], dtype=np.uint8)
+        np.testing.assert_array_equal(translate_reflect(one_pixel, 100, -100), one_pixel)
 
     def test_augmentation_does_not_mutate_input(self):
         original = self.images.copy()
