@@ -1,4 +1,12 @@
-"""Small NumPy augmentation helpers for traffic-sign image batches."""
+"""Small NumPy augmentation helpers for traffic-sign image batches.
+
+All operations are O(NHWK) for N images of H by W pixels and K channels and
+return a new array, so callers can safely reuse the original training batch.
+Zero padding preserves the frame and discards shifted-out content; wrapping
+preserves every pixel but can introduce an artificial edge; reflection avoids
+black borders while mirroring edge content.  The mode selector makes that
+boundary trade-off explicit for experiments.
+"""
 
 from __future__ import annotations
 
