@@ -33,6 +33,20 @@ class MetricsCharacterizationTests(unittest.TestCase):
         self.assertEqual(top_k_accuracy(logits, np.array([0, 1, 2]), k=1), 2 / 3)
         self.assertEqual(top_k_accuracy(logits, np.array([0, 1, 2]), k=2), 1.0)
 
+    def test_perfect_predictions_and_inferred_class_count_are_exact(self):
+        labels = np.array([0, 2, 2])
+
+        self.assertEqual(accuracy(labels, labels), 1.0)
+        np.testing.assert_array_equal(
+            confusion_matrix(labels, labels),
+            np.array([[1, 0, 0], [0, 0, 0], [0, 0, 2]]),
+        )
+
+    def test_top_k_accepts_all_classes_as_the_boundary(self):
+        logits = np.array([[0.0, 1.0], [1.0, 0.0]])
+
+        self.assertEqual(top_k_accuracy(logits, np.array([1, 0]), k=2), 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()
