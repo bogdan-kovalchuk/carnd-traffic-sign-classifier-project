@@ -2,7 +2,14 @@ import unittest
 
 import numpy as np
 
-from src.metrics import accuracy, classification_report, confusion_matrix, top_k_accuracy
+from src.metrics import (
+    accuracy,
+    accuracy_vectorized,
+    classification_report,
+    confusion_matrix,
+    confusion_matrix_vectorized,
+    top_k_accuracy,
+)
 
 
 class MetricsCharacterizationTests(unittest.TestCase):
@@ -46,6 +53,22 @@ class MetricsCharacterizationTests(unittest.TestCase):
         logits = np.array([[0.0, 1.0], [1.0, 0.0]])
 
         self.assertEqual(top_k_accuracy(logits, np.array([1, 0]), k=2), 1.0)
+
+
+class MetricsAlternativeTests(unittest.TestCase):
+    def test_vectorized_accuracy_matches_reference(self):
+        true = np.array([0, 1, 2, 2, 1])
+        pred = np.array([0, 2, 2, 1, 1])
+
+        self.assertEqual(accuracy_vectorized(true, pred), accuracy(true, pred))
+
+    def test_vectorized_confusion_matrix_matches_reference(self):
+        true = np.array([0, 1, 2, 2, 1])
+        pred = np.array([0, 2, 2, 1, 1])
+
+        np.testing.assert_array_equal(
+            confusion_matrix_vectorized(true, pred, 4), confusion_matrix(true, pred, 4)
+        )
 
 
 if __name__ == "__main__":

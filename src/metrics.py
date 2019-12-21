@@ -37,6 +37,12 @@ def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return correct / true.size
 
 
+def accuracy_vectorized(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Return accuracy using NumPy elementwise comparison."""
+    true, pred = _validate_label_pair(y_true, y_pred)
+    return float(np.mean(true == pred))
+
+
 def confusion_matrix(
     y_true: np.ndarray,
     y_pred: np.ndarray,
@@ -48,6 +54,19 @@ def confusion_matrix(
     matrix = np.zeros((classes, classes), dtype=np.int64)
     for expected, actual in zip(true, pred):
         matrix[expected, actual] += 1
+    return matrix
+
+
+def confusion_matrix_vectorized(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    num_classes: int | None = None,
+) -> np.ndarray:
+    """Build a confusion matrix with indexed accumulation."""
+    true, pred = _validate_label_pair(y_true, y_pred)
+    classes = _resolve_num_classes(true, pred, num_classes)
+    matrix = np.zeros((classes, classes), dtype=np.int64)
+    np.add.at(matrix, (true, pred), 1)
     return matrix
 
 
