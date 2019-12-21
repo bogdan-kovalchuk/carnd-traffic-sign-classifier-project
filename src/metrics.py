@@ -70,6 +70,16 @@ def confusion_matrix_vectorized(
     return matrix
 
 
+def accuracy_from_confusion(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    num_classes: int | None = None,
+) -> float:
+    """Return accuracy from the trace of a vectorized confusion matrix."""
+    matrix = confusion_matrix_vectorized(y_true, y_pred, num_classes)
+    return float(np.trace(matrix) / matrix.sum())
+
+
 def classification_report(
     y_true: np.ndarray,
     y_pred: np.ndarray,

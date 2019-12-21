@@ -4,6 +4,7 @@ import numpy as np
 
 from src.metrics import (
     accuracy,
+    accuracy_from_confusion,
     accuracy_vectorized,
     classification_report,
     confusion_matrix,
@@ -61,6 +62,12 @@ class MetricsAlternativeTests(unittest.TestCase):
         pred = np.array([0, 2, 2, 1, 1])
 
         self.assertEqual(accuracy_vectorized(true, pred), accuracy(true, pred))
+
+    def test_confusion_trace_accuracy_matches_direct_methods(self):
+        true = np.array([0, 1, 2, 2, 1])
+        pred = np.array([0, 2, 2, 1, 1])
+
+        self.assertEqual(accuracy_from_confusion(true, pred, 3), accuracy(true, pred))
 
     def test_vectorized_confusion_matrix_matches_reference(self):
         true = np.array([0, 1, 2, 2, 1])
