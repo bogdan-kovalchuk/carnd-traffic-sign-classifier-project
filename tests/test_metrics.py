@@ -10,6 +10,7 @@ from src.metrics import (
     confusion_matrix,
     confusion_matrix_vectorized,
     top_k_accuracy,
+    top_k_accuracy_partition,
 )
 
 
@@ -76,6 +77,12 @@ class MetricsAlternativeTests(unittest.TestCase):
         np.testing.assert_array_equal(
             confusion_matrix_vectorized(true, pred, 4), confusion_matrix(true, pred, 4)
         )
+
+    def test_partition_top_k_matches_full_sort_without_ties(self):
+        logits = np.array([[9, 1, 4, 0], [0, 8, 3, 6], [5, 2, 7, 1]])
+        labels = np.array([2, 3, 0])
+
+        self.assertEqual(top_k_accuracy_partition(logits, labels, 2), top_k_accuracy(logits, labels, 2))
 
 
 if __name__ == "__main__":
