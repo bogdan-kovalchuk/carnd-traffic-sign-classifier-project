@@ -104,8 +104,9 @@ def classification_report(
     return report
 
 
-def top_k_accuracy(logits: np.ndarray, labels: np.ndarray, k: int = 5) -> float:
-    """Return the fraction whose label appears in the top ``k`` scores."""
+def _validate_top_k_inputs(
+    logits: np.ndarray, labels: np.ndarray, k: int
+) -> tuple[np.ndarray, np.ndarray, int]:
     scores = np.asarray(logits)
     targets = np.asarray(labels)
     if scores.ndim != 2 or scores.shape[0] == 0 or scores.shape[1] == 0:
@@ -120,25 +121,18 @@ def top_k_accuracy(logits: np.ndarray, labels: np.ndarray, k: int = 5) -> float:
         raise TypeError("k must be an integer")
     if k < 1 or k > scores.shape[1]:
         raise ValueError("k must be between one and the number of classes")
+    return scores, targets, int(k)
+
+
+def top_k_accuracy(logits: np.ndarray, labels: np.ndarray, k: int = 5) -> float:
+    """Return the fraction whose label appears in the top ``k`` scores."""
+    scores, targets, k = _validate_top_k_inputs(logits, labels, k)
     top = np.argsort(-scores, axis=1, kind="stable")[:, :k]
     return float(np.mean(np.any(top == targets[:, None], axis=1)))
 
 
 def top_k_accuracy_partition(logits: np.ndarray, labels: np.ndarray, k: int = 5) -> float:
     """Return top-k accuracy using partial selection instead of full sorting."""
-    scores = np.asarray(logits)
-    targets = np.asarray(labels)
-    if scores.ndim != 2 or scores.shape[0] == 0 or scores.shape[1] == 0:
-        raise ValueError("logits must be a non-empty two-dimensional array")
-    if not np.issubdtype(scores.dtype, np.number) or not np.isfinite(scores).all():
-        raise ValueError("logits must contain finite numeric values")
-    if targets.ndim != 1 or targets.size != scores.shape[0]:
-        raise ValueError("labels must match the number of logit rows")
-    if not np.issubdtype(targets.dtype, np.integer) or np.any(targets < 0):
-        raise TypeError("labels must contain non-negative integers")
-    if not isinstance(k, (int, np.integer)) or isinstance(k, bool):
-        raise TypeError("k must be an integer")
-    if k < 1 or k > scores.shape[1]:
-        raise ValueError("k must be between one and the number of classes")
+    scores, targets, k = _validate_top_k_inputs(logits, labels, k)
     candidates = np.argpartition(-scores, kth=k - 1, axis=1)[:, :k]
     return float(np.mean(np.any(candidates == targets[:, None], axis=1)))

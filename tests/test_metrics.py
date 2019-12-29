@@ -85,5 +85,36 @@ class MetricsAlternativeTests(unittest.TestCase):
         self.assertEqual(top_k_accuracy_partition(logits, labels, 2), top_k_accuracy(logits, labels, 2))
 
 
+class MetricsRobustnessTests(unittest.TestCase):
+    def test_label_metrics_reject_bad_lengths_types_and_class_counts(self):
+        with self.assertRaises(ValueError):
+            accuracy([0, 1], [0])
+        with self.assertRaises(TypeError):
+            accuracy(np.array([0.0]), np.array([0]))
+        with self.assertRaises(ValueError):
+            confusion_matrix(np.array([0]), np.array([0]), num_classes=0)
+        with self.assertRaises(TypeError):
+            confusion_matrix(np.array([0]), np.array([0]), num_classes=1.5)
+
+    def test_top_k_rejects_bad_logits_labels_and_k_boundaries(self):
+        logits = np.array([[1.0, 0.0], [0.0, 1.0]])
+        labels = np.array([0, 1])
+        for invalid in (0, 3):
+            with self.assertRaises(ValueError):
+                top_k_accuracy(logits, labels, invalid)
+        with self.assertRaises(ValueError):
+            top_k_accuracy(np.array([[np.inf, 0.0]]), np.array([0]), 1)
+        with self.assertRaises(TypeError):
+            top_k_accuracy(logits, np.array([0.0, 1.0]), 1)
+        with self.assertRaises(ValueError):
+            top_k_accuracy(np.empty((0, 2)), np.array([], dtype=np.int64), 1)
+
+    def test_report_includes_absent_class_with_zero_support(self):
+        report = classification_report(np.array([0, 0]), np.array([0, 0]), num_classes=2)
+
+        self.assertEqual(report[1]["support"], 0)
+        self.assertEqual(report[1]["precision"], 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()
