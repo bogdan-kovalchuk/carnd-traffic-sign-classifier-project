@@ -37,7 +37,7 @@ class MetricsCharacterizationTests(unittest.TestCase):
         self.assertAlmostEqual(report[1]["f1"], 0.5)
 
     def test_top_k_accuracy_finds_labels_in_ranked_logits(self):
-        logits = np.array([[4, 1, 0], [0, 2, 3], [3, 2, 1]])
+        logits = np.array([[4, 1, 0], [0, 2, 3], [1, 0, 2]])
 
         self.assertEqual(top_k_accuracy(logits, np.array([0, 1, 2]), k=1), 2 / 3)
         self.assertEqual(top_k_accuracy(logits, np.array([0, 1, 2]), k=2), 1.0)

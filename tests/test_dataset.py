@@ -67,7 +67,7 @@ class DatasetCharacterizationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_split_indices([0], [1], 1)
         with self.assertRaises(ValueError):
-            validate_split_indices([0, 2], [1], 3)
+            validate_split_indices([0, 3], [1], 3)
         with self.assertRaises(TypeError):
             validate_split_indices([0], [1], 3.0)
 
