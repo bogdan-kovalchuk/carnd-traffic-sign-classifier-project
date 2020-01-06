@@ -1,4 +1,15 @@
-"""Dependency-light classification metrics for traffic-sign predictions."""
+"""Dependency-light classification metrics for traffic-sign predictions.
+
+Complexity and trade-offs:
+    Loop accuracy and confusion-matrix construction are O(n) time with low
+    temporary memory and are easy to audit.  Their vectorized counterparts use
+    O(n) indexed work and O(c^2) matrix storage for c classes, usually trading
+    more temporary memory for faster large batches.  Full-sort top-k ranking
+    costs O(n c log c); the partition variant costs O(n c) expected work and
+    is preferable when c is large, but does not define a stable order among
+    tied scores.  Metrics intentionally return plain NumPy/Python values and
+    do not require a training framework.
+"""
 
 from __future__ import annotations
 
